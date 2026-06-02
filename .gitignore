@@ -1,0 +1,48 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+.venv
+venv/
+dist/
+*.egg-info/
+.pytest_cache/
+storage/
+*.db
+.DS_Store
+
+# Assets with personal data — add your own files, don't commit them
+assets/profile/
+assets/frames/
+# Font files — Gilroy is committed; add other private fonts here if needed
+# assets/fonts/*.ttf  — Gilroy-Bold.ttf is committed
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Working folders / one-off samples — not part of the codebase
+Output/
+"Market Radar Sample/"
+Promising-Report-Automation/
+game-icons/
+gilroy-bold/
+gilroy-font/
+market-radar-*/
+
+# Sample / scratch files
+*.pdf
+*.zip
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.xlsx
+# But keep curated repo assets
+!assets/**/*.png
+!assets/**/*.jpg
+!app/web/static/**/*.png
+!app/web/static/**/*.jpg
+!fetch-inspiration-icon-strategy.md
+
