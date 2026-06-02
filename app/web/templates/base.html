@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Market Radar Forge{% endblock %}</title>
+  <script src="/static/htmx.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --yellow: #F5C518;
+      --black: #0d0d0d;
+      --white: #ffffff;
+      --gray-50: #f7f7f7;
+      --gray-100: #efefef;
+      --gray-200: #e0e0e0;
+      --gray-300: #ccc;
+      --gray-400: #aaa;
+      --gray-600: #555;
+      --sidebar-width: 360px;
+      --topbar-height: 52px;
+      --radius: 10px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.10);
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #1a1a1a;
+      color: var(--black);
+    }
+    /* Studio mode (editor) — full height, no scroll */
+    body.studio-mode { overflow: hidden; }
+
+    /* ── Top bar ────────────────────────────────────────────────────────────── */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: var(--topbar-height);
+      background: #111;
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 20px;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .topbar .logo {
+      font-size: 15px; font-weight: 800;
+      background: var(--yellow); color: #000;
+      padding: 3px 12px; border-radius: 5px; letter-spacing: -.3px;
+    }
+    .topbar .app-name {
+      font-size: 14px; font-weight: 600; color: #fff;
+    }
+    .topbar .sep { color: #444; font-size: 14px; }
+    .topbar .draft-name { font-size: 13px; color: #888; }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+    /* ── Studio layout ──────────────────────────────────────────────────────── */
+    .studio {
+      display: flex;
+      height: 100vh;
+      padding-top: var(--topbar-height);
+    }
+
+    /* ── Sidebar ────────────────────────────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      background: #161616;
+      border-right: 1px solid #2a2a2a;
+      overflow-y: auto;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-inner {
+      padding: 16px;
+      flex: 1;
+    }
+
+    .sb-section {
+      background: #1c1c1c;
+      border: 1px solid #2a2a2a;
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .sb-section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px;
+      background: #1c1c1c;
+      border-bottom: 1px solid #2a2a2a;
+      cursor: pointer;
+      user-select: none;
+    }
+    .sb-section-header:hover { background: #222; }
+    .sb-section-title {
+      font-size: 12px; font-weight: 700; color: #888;
+      text-transform: uppercase; letter-spacing: .5px;
+    }
+    .sb-section-body { padding: 14px; }
+
+    .field { margin-bottom: 14px; }
+    .field:last-child { margin-bottom: 0; }
+    label { display: block; font-size: 11px; font-weight: 700; color: #666; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
+    input[type=text], input[type=number], textarea, select {
+      width: 100%; padding: 8px 11px;
+      border: 1px solid #333; border-radius: 7px;
+      font-size: 13px; outline: none; background: #111; color: #ddd;
+      transition: border-color .15s, background .15s;
+    }
+    input:focus, textarea:focus { border-color: var(--yellow); background: #0d0d0d; }
+    textarea { min-height: 140px; resize: vertical; font-family: monospace; font-size: 12px; }
+
+    .row { display: flex; gap: 10px; }
+    .row .field { flex: 1; }
+
+    /* ── Inspiration blocks ─────────────────────────────────────────────────── */
+    .insp-block {
+      background: #222; border: 1px solid #2a2a2a;
+      border-radius: 8px; padding: 12px; margin-bottom: 8px;
+    }
+    .insp-block:last-child { margin-bottom: 0; }
+    .insp-num { font-size: 10px; font-weight: 800; color: #555; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+
+    /* ── Buttons ────────────────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border: none; transition: opacity .15s;
+    }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn:hover:not(:disabled) { opacity: .85; }
+    .btn-primary { background: #fff; color: #000; }
+    .btn-secondary { background: #2a2a2a; color: #ccc; border: 1px solid #333; }
+    .btn-yellow { background: var(--yellow); color: #000; }
+    .btn-danger { background: #e53e3e; color: #fff; }
+    .btn-sm { padding: 5px 11px; font-size: 12px; }
+    .btn-xs { padding: 3px 8px; font-size: 11px; border-radius: 5px; }
+    .btn-full { width: 100%; justify-content: center; }
+
+    .topbar .btn { font-size: 12px; padding: 6px 14px; }
+    .topbar .btn-yellow { font-size: 12px; }
+
+    /* ── Drop zone ──────────────────────────────────────────────────────────── */
+    .drop-zone {
+      border: 2px dashed #333; border-radius: 8px;
+      padding: 14px 10px; text-align: center;
+      font-size: 12px; color: #555; cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--yellow); background: #1a1800; color: #ccc; }
+    .drop-zone input[type=file] { display: none; }
+    .upload-preview { max-width: 100%; border-radius: 8px; margin-top: 6px; max-height: 80px; object-fit: cover; }
+
+    /* ── Tab row ────────────────────────────────────────────────────────────── */
+    .tab-row { display: flex; gap: 4px; margin-bottom: 8px; }
+    .tab-btn {
+      padding: 4px 10px; border-radius: 5px; border: 1px solid #333;
+      background: #222; font-size: 11px; font-weight: 600; cursor: pointer; color: #888;
+    }
+    .tab-btn.active { background: var(--yellow); color: #000; border-color: var(--yellow); }
+
+    /* ── Status badge ───────────────────────────────────────────────────────── */
+    .status-ok::before { content: '✓ '; color: #1a7a3c; }
+    .status-needs_upload::before { content: '⚠ '; color: #c67c00; }
+    .status-error::before { content: '✗ '; color: #c0392b; }
+
+    /* ── Canvas area ────────────────────────────────────────────────────────── */
+    .canvas-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #222;
+      overflow: hidden;
+      position: relative;
+    }
+    .canvas-wrap {
+      position: relative;
+      /* square aspect ratio, fits within available space */
+      width: min(calc(100vh - var(--topbar-height) - 80px), calc(100vw - var(--sidebar-width) - 80px));
+      aspect-ratio: 1 / 1;
+    }
+    .canvas-img {
+      width: 100%; height: 100%;
+      display: block;
+      border-radius: 4px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.6);
+    }
+    .canvas-loading-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,.4);
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 4px;
+    }
+    .canvas-placeholder {
+      width: 100%; height: 100%;
+      background: #2a2a2a;
+      border-radius: 4px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 12px;
+      color: #555;
+    }
+    .canvas-placeholder .icon { font-size: 56px; }
+    .canvas-placeholder .text { font-size: 15px; font-weight: 600; }
+    .canvas-placeholder .sub { font-size: 13px; color: #444; }
+
+    .canvas-info {
+      margin-top: 12px;
+      display: flex; align-items: center; gap: 16px;
+      font-size: 12px; color: #555;
+    }
+
+    /* ── JSON upload strip ──────────────────────────────────────────────────── */
+    .json-upload-strip {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; background: #1a1800;
+      border-bottom: 1px solid #2a2200;
+      font-size: 12px; color: #888;
+    }
+    .json-upload-strip label { display: inline; font-size: 12px; font-weight: 600; color: var(--yellow); text-transform: none; letter-spacing: 0; margin: 0; cursor: pointer; }
+    .json-upload-strip input { display: none; }
+
+    /* ── Saving indicator ───────────────────────────────────────────────────── */
+    .saving-indicator { font-size: 12px; color: #888; }
+
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid #ccc; border-top-color: #333;
+      border-radius: 50%; animation: spin .6s linear infinite;
+    }
+    .spinner-white {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin .6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error { color: #c0392b; font-size: 12px; margin-top: 6px; }
+
+    /* ── Sidebar footer ─────────────────────────────────────────────────────── */
+    .sidebar-footer {
+      padding: 14px 16px;
+      border-top: 1px solid #2a2a2a;
+      background: #161616;
+      position: sticky; bottom: 0;
+    }
+
+    /* ── Icon thumbnail ─────────────────────────────────────────────────────── */
+    .icon-thumb { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid #333; }
+    .icon-upload-btn {
+      display: inline-block; padding: 4px 10px;
+      border: 1px solid #333; border-radius: 6px;
+      font-size: 11px; cursor: pointer; background: #222; color: #aaa; font-weight: 600;
+    }
+    .icon-upload-btn:hover { background: #2a2a2a; color: #eee; }
+
+    /* ── Screenshot thumb in sidebar ────────────────────────────────────────── */
+    .ss-thumb { width: 100%; height: 72px; object-fit: cover; border-radius: 6px; border: 1px solid #333; margin-bottom: 6px; }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <!-- Top bar -->
+  <div class="topbar">
+    <a href="/" style="text-decoration:none"><span class="logo">NBG</span></a>
+    <span class="app-name">Market Radar Forge</span>
+    {% block topbar_center %}{% endblock %}
+    <div class="topbar-right">{% block topbar_right %}{% endblock %}</div>
+  </div>
+
+  {% block body %}{% endblock %}
+</body>
+</html>
