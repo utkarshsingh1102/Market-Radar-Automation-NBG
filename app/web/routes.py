@@ -15,12 +15,12 @@ static_dir = Path(__file__).parent / "static"
 
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
+    return templates.TemplateResponse(request, "home.html", {"request": request})
 
 
 @router.get("/projects/new", response_class=HTMLResponse)
 async def new_project_page(request: Request):
-    return templates.TemplateResponse("new_project.html", {"request": request})
+    return templates.TemplateResponse(request, "new_project.html", {"request": request})
 
 
 @router.get("/projects/{project_id}", response_class=HTMLResponse)
@@ -78,7 +78,7 @@ async def project_page(project_id: str, request: Request):
                 ],
             }
 
-    return templates.TemplateResponse("project.html", {
+    return templates.TemplateResponse(request, "project.html", {
         "request": request,
         "project": project,
         "slides": slides,
@@ -100,6 +100,7 @@ async def edit_draft_page(draft_id: UUID, request: Request):
         if draft.preview_asset_key else ""
     )
     return templates.TemplateResponse(
+        request,
         "edit_draft.html",
         {"request": request, "draft": draft, "preview_url": preview_url},
     )
