@@ -7,7 +7,8 @@ venv/
 dist/
 *.egg-info/
 .pytest_cache/
-storage/
+# Runtime asset storage at repo root only — NOT the app/storage source package
+/storage/
 *.db
 .DS_Store
 
